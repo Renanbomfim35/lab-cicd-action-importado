@@ -6,3 +6,4 @@
 - () pedido 3: mudar tamanho do nome
   ## versão 3 - publicada
   - erro corrigido - cor alternada
+  - erro corrigido - mudança de titulo e emojis
