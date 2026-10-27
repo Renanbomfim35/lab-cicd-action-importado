@@ -1,12 +1,13 @@
 # UNINOVE - Automação de Processos (DevOps) - Prof. Marcelino Dias da Silva
+# Tema: Especial de Páscoa 🐰🍫
 #
-# Toda vez que alguém envia um arquivo para o GitHub, este robô:
+# Toda vez que alguém envia um arquivo para o GitHub, este robô coelhinho:
 #
-#   1) VERIFICA o index.html   --tudo certo?-->   2) PUBLICA o site
-#            |
-#            +--achou problema?--> PARA TUDO. O site antigo continua no ar.
+#   1) VERIFICA o index.html   --tudo certo?-->    2) PUBLICA o site de Páscoa
+#               |
+#               +--achou problema?--> PARA TUDO. O site antigo continua no ar.
 
-name: Publicar site
+name: Publicar site de Páscoa
 
 on:
   push:
@@ -15,47 +16,47 @@ on:
 
 jobs:
   # ------------------------------------------------------------------
-  # CI - o robô confere se o arquivo está certo
+  # CI - o coelhinho inspetor confere se o arquivo está certo
   # ------------------------------------------------------------------
   verificar:
-    name: 1 - Verificar arquivo
+    name: 1 - Caça aos Erros de Páscoa
     runs-on: ubuntu-latest
     steps:
-      - name: Baixar os arquivos do repositório
+      - name: Baixar os arquivos da cesta (repositório)
         uses: actions/checkout@v7
 
-      - name: Regra 1 - O arquivo index.html existe?
+      - name: Regra 1 - O arquivo index.html está na cesta?
         run: |
           if [ -f index.html ]; then
-            echo "✅ Encontrei o arquivo index.html"
+            echo "🥚 Encontrei o ovo dourado (index.html)!"
           else
-            echo "::error::❌ Não encontrei o arquivo index.html"
+            echo "::error::❌ O coelhinho procurou, mas não encontrei o arquivo index.html!"
             exit 1
           fi
 
-      - name: Regra 2 - O site tem título?
+      - name: Regra 2 - O site tem orelhas (título festivo)?
         run: |
           if grep -qi "<title>" index.html; then
-            echo "✅ O site tem título"
+            echo "🐰 O site tem título e orelhas de coelho!"
           else
-            echo "::error::❌ O site está sem título (<title>)"
+            echo "::error::❌ O site está sem título (<title>). Cadê o espírito de Páscoa?"
             exit 1
           fi
 
-      - name: Regra 3 - O arquivo está completo?
+      - name: Regra 3 - A caça aos chocolates está completa?
         run: |
           if grep -qi "</html>" index.html; then
-            echo "✅ O arquivo está completo (termina com </html>)"
+            echo "🍫 O arquivo está completo e bem embrulhado (termina com </html>)"
           else
-            echo "::error::❌ O arquivo está INCOMPLETO: não termina com </html>. Deploy bloqueado!"
+            echo "::error::❌ O arquivo está INCOMPLETO: falta fechar a tag </html>. Deploy de Páscoa bloqueado!"
             exit 1
           fi
 
   # ------------------------------------------------------------------
-  # CD - o robô publica o site no GitHub Pages
+  # CD - o coelhinho entregador publica o site no GitHub Pages
   # ------------------------------------------------------------------
   publicar:
-    name: 2 - Publicar site
+    name: 2 - Entregar site de Páscoa
     needs: verificar      # <-- SÓ roda se a verificação passar!
     runs-on: ubuntu-latest
     permissions:
@@ -66,23 +67,23 @@ jobs:
       group: pages
       cancel-in-progress: false
     steps:
-      - name: Baixar os arquivos do repositório
+      - name: Coletar os ovos do repositório
         uses: actions/checkout@v7
 
-      - name: Conferir se o GitHub Pages está ligado
+      - name: Conferir se o GitHub Pages está com os ovos na cesta (ligado)
         id: pages
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           if gh api "repos/${{ github.repository }}/pages" > /dev/null 2>&1; then
-            echo "✅ GitHub Pages está ligado"
+            echo "✅ GitHub Pages está ligado e pronto para a entrega!"
             echo "ligado=sim" >> "$GITHUB_OUTPUT"
           else
             echo "::warning::GitHub Pages ainda não está ligado. Vá em Settings > Pages > Source: GitHub Actions e envie o arquivo de novo."
             echo "ligado=nao" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Carimbar data, commit e autor no site
+      - name: Carimbar o commit, o coelhinho (autor) e a hora da entrega no site
         if: steps.pages.outputs.ligado == 'sim'
         run: |
           mkdir -p _site
@@ -91,19 +92,19 @@ jobs:
           sed -i "s|__AUTOR__|${{ github.actor }}|g" _site/index.html
           sed -i "s|__DATA__|$(TZ=America/Sao_Paulo date '+%d/%m/%Y às %H:%M')|g" _site/index.html
 
-      - name: Empacotar o site
+      - name: Embrulhar o site em formato de presente
         if: steps.pages.outputs.ligado == 'sim'
         uses: actions/upload-pages-artifact@v5
         with:
           path: _site
 
-      - name: Publicar no GitHub Pages
+      - name: Distribuir no GitHub Pages
         if: steps.pages.outputs.ligado == 'sim'
         id: publicar
         uses: actions/deploy-pages@v5
 
-      - name: Mostrar o endereço do site
+      - name: Mostrar o endereço da entrega
         if: steps.pages.outputs.ligado == 'sim'
         run: |
-          echo "🌐 Seu site: ${{ steps.publicar.outputs.page_url }}"
-          echo "## 🌐 Site publicado: ${{ steps.publicar.outputs.page_url }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "🐰🍫 Feliz Páscoa! Seu site está no ar: ${{ steps.publicar.outputs.page_url }}"
+          echo "## 🐰🍫 Feliz Páscoa! Site publicado com sucesso: ${{ steps.publicar.outputs.page_url }}" >> "$GITHUB_STEP_SUMMARY"
