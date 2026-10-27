@@ -1,110 +1,63 @@
-# UNINOVE - Automação de Processos (DevOps) - Prof. Marcelino Dias da Silva
-# Tema: Especial de Páscoa 🐰🍫
-#
-# Toda vez que alguém envia um arquivo para o GitHub, este robô coelhinho:
-#
-#   1) VERIFICA o index.html   --tudo certo?-->    2) PUBLICA o site de Páscoa
-#               |
-#               +--achou problema?--> PARA TUDO. O site antigo continua no ar.
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feliz Páscoa - DevOps UNINOVE</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #fff0f3 0%, #ffccd5 100%);
+            color: #4a3b32;
+            text-align: center;
+            padding: 50px 20px;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .card {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 100%;
+        }
+        h1 {
+            color: #d90429;
+            margin-bottom: 10px;
+        }
+        .emoji {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+        p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 0.85rem;
+            color: #8d7b73;
+            border-top: 1px solid #f1d3d6;
+            padding-top: 15px;
+        }
+    </style>
+</head>
+<body>
 
-name: Publicar site de Páscoa
+    <div class="card">
+        <div class="emoji">🐰🍫🐣</div>
+        <h1>Feliz Páscoa, Turma!</h1>
+        <p>Este site foi verificado pelo coelhinho inspetor e publicado automaticamente via <strong>GitHub Actions</strong> (CI/CD) para a aula do Prof. Marcelino Dias da Silva na UNINOVE.</p>
+        
+        <div class="footer">
+            <p>📦 <strong>Commit:</strong> __COMMIT__ &nbsp;|&nbsp; 👤 <strong>Autor:</strong> __AUTOR__<br>
+            📅 <strong>Entregue em:</strong> __DATA__</p>
+        </div>
+    </div>
 
-on:
-  push:
-    branches: [main]      # roda sempre que um arquivo é enviado
-  workflow_dispatch:      # e também pelo botão "Run workflow"
-
-jobs:
-  # ------------------------------------------------------------------
-  # CI - o coelhinho inspetor confere se o arquivo está certo
-  # ------------------------------------------------------------------
-  verificar:
-    name: 1 - Caça aos Erros de Páscoa
-    runs-on: ubuntu-latest
-    steps:
-      - name: Baixar os arquivos da cesta (repositório)
-        uses: actions/checkout@v7
-
-      - name: Regra 1 - O arquivo index.html está na cesta?
-        run: |
-          if [ -f index.html ]; then
-            echo "🥚 Encontrei o ovo dourado (index.html)!"
-          else
-            echo "::error::❌ O coelhinho procurou, mas não encontrei o arquivo index.html!"
-            exit 1
-          fi
-
-      - name: Regra 2 - O site tem orelhas (título festivo)?
-        run: |
-          if grep -qi "<title>" index.html; then
-            echo "🐰 O site tem título e orelhas de coelho!"
-          else
-            echo "::error::❌ O site está sem título (<title>). Cadê o espírito de Páscoa?"
-            exit 1
-          fi
-
-      - name: Regra 3 - A caça aos chocolates está completa?
-        run: |
-          if grep -qi "</html>" index.html; then
-            echo "🍫 O arquivo está completo e bem embrulhado (termina com </html>)"
-          else
-            echo "::error::❌ O arquivo está INCOMPLETO: falta fechar a tag </html>. Deploy de Páscoa bloqueado!"
-            exit 1
-          fi
-
-  # ------------------------------------------------------------------
-  # CD - o coelhinho entregador publica o site no GitHub Pages
-  # ------------------------------------------------------------------
-  publicar:
-    name: 2 - Entregar site de Páscoa
-    needs: verificar      # <-- SÓ roda se a verificação passar!
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-    concurrency:
-      group: pages
-      cancel-in-progress: false
-    steps:
-      - name: Coletar os ovos do repositório
-        uses: actions/checkout@v7
-
-      - name: Conferir se o GitHub Pages está com os ovos na cesta (ligado)
-        id: pages
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          if gh api "repos/${{ github.repository }}/pages" > /dev/null 2>&1; then
-            echo "✅ GitHub Pages está ligado e pronto para a entrega!"
-            echo "ligado=sim" >> "$GITHUB_OUTPUT"
-          else
-            echo "::warning::GitHub Pages ainda não está ligado. Vá em Settings > Pages > Source: GitHub Actions e envie o arquivo de novo."
-            echo "ligado=nao" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Carimbar o commit, o coelhinho (autor) e a hora da entrega no site
-        if: steps.pages.outputs.ligado == 'sim'
-        run: |
-          mkdir -p _site
-          cp index.html _site/index.html
-          sed -i "s|__COMMIT__|${GITHUB_SHA::7}|g"   _site/index.html
-          sed -i "s|__AUTOR__|${{ github.actor }}|g" _site/index.html
-          sed -i "s|__DATA__|$(TZ=America/Sao_Paulo date '+%d/%m/%Y às %H:%M')|g" _site/index.html
-
-      - name: Embrulhar o site em formato de presente
-        if: steps.pages.outputs.ligado == 'sim'
-        uses: actions/upload-pages-artifact@v5
-        with:
-          path: _site
-
-      - name: Distribuir no GitHub Pages
-        if: steps.pages.outputs.ligado == 'sim'
-        id: publicar
-        uses: actions/deploy-pages@v5
-
-      - name: Mostrar o endereço da entrega
-        if: steps.pages.outputs.ligado == 'sim'
-        run: |
-          echo "🐰🍫 Feliz Páscoa! Seu site está no ar: ${{ steps.publicar.outputs.page_url }}"
-          echo "## 🐰🍫 Feliz Páscoa! Site publicado com sucesso: ${{ steps.publicar.outputs.page_url }}" >> "$GITHUB_STEP_SUMMARY"
+</html>
